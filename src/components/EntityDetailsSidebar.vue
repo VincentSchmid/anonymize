@@ -2,6 +2,7 @@
 import { computed } from "vue";
 import Card from "@/components/ui/card.vue";
 import Button from "@/components/ui/button.vue";
+import Tooltip from "@/components/ui/tooltip.vue";
 import type { EditableEntity } from "@/composables/useAnonymizer";
 import { Check, X, RotateCcw, ChevronDown } from "lucide-vue-next";
 import {
@@ -78,7 +79,10 @@ function handleReclassify(entity: EditableEntity, newType: string) {
 <template>
   <Card class="p-4">
     <div class="flex items-center justify-between mb-4">
-      <h3 class="font-medium">Entity Details</h3>
+      <h3 class="flex items-center gap-2 font-medium">
+        Entity Details
+        <Tooltip text="Review and adjust detected entities. Click an entity type to reclassify it, or use 'Keep original' to exclude it from anonymization." />
+      </h3>
       <Button
         v-if="stats.excluded > 0 || stats.reclassified > 0"
         variant="ghost"

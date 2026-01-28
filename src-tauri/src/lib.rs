@@ -1,5 +1,7 @@
 mod sidecar;
 
+use tauri::RunEvent;
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -22,6 +24,14 @@ pub fn run() {
             sidecar::get_backend_url,
             sidecar::check_backend_health,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|_app_handle, event| {
+            if let RunEvent::Exit = event {
+                println!("Application exiting, stopping sidecar...");
+                if let Err(e) = sidecar::stop_sidecar() {
+                    eprintln!("Failed to stop sidecar on exit: {}", e);
+                }
+            }
+        });
 }

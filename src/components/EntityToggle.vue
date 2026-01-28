@@ -2,6 +2,7 @@
 import Switch from "@/components/ui/switch.vue";
 import Button from "@/components/ui/button.vue";
 import Badge from "@/components/ui/badge.vue";
+import Tooltip from "@/components/ui/tooltip.vue";
 import type { EntityInfo } from "@/lib/api";
 import {
   User,
@@ -48,7 +49,10 @@ function getEntityIcon(entityType: string) {
 <template>
   <div class="space-y-4">
     <div class="flex items-center justify-between">
-      <h3 class="text-sm font-medium">Entity Types</h3>
+      <h3 class="flex items-center gap-2 text-sm font-medium">
+        Entity Types
+        <Tooltip text="Select which types of personal information to detect and anonymize. Disabled types will be ignored during processing." />
+      </h3>
       <div class="flex gap-2">
         <Button variant="outline" size="sm" @click="emit('enable-all')">
           Select All
@@ -68,6 +72,7 @@ function getEntityIcon(entityType: string) {
       <div v-if="entities.some((e) => e.is_swiss)">
         <div class="mb-2 flex items-center gap-2">
           <Badge variant="secondary" class="text-xs">Swiss</Badge>
+          <Tooltip text="Switzerland-specific identifiers like AHV numbers, Swiss phone formats, postal codes, and IBANs." />
         </div>
         <div class="grid gap-2">
           <div
@@ -99,6 +104,7 @@ function getEntityIcon(entityType: string) {
       <div>
         <div class="mb-2 flex items-center gap-2">
           <Badge variant="outline" class="text-xs">Standard</Badge>
+          <Tooltip text="Common personal data types recognized internationally: names, email addresses, phone numbers, locations, and dates." />
         </div>
         <div class="grid gap-2">
           <div

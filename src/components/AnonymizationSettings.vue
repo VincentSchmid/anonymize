@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { AnonymizationStyle } from "@/composables/useAnonymizer";
+import Tooltip from "@/components/ui/tooltip.vue";
 import { Replace, EyeOff, Hash, Eraser } from "lucide-vue-next";
 
 interface Props {
@@ -52,7 +53,10 @@ const styles: {
 
 <template>
   <div class="space-y-3">
-    <h3 class="text-sm font-medium">Anonymization Style</h3>
+    <h3 class="flex items-center gap-2 text-sm font-medium">
+      Anonymization Style
+      <Tooltip text="Choose how detected entities are anonymized in the output. Replace shows the entity type, Mask uses asterisks, Hash creates a unique identifier, and Redact removes the text completely." />
+    </h3>
     <div class="grid grid-cols-2 gap-2">
       <button
         v-for="style in styles"

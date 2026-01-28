@@ -10,6 +10,7 @@ import ResultViewer from "@/components/ResultViewer.vue";
 import EntityDetailsSidebar from "@/components/EntityDetailsSidebar.vue";
 import { useSidecar } from "@/composables/useSidecar";
 import { useAnonymizer } from "@/composables/useAnonymizer";
+import Tooltip from "@/components/ui/tooltip.vue";
 import {
   Shield,
   AlertCircle,
@@ -94,22 +95,28 @@ function handleStartOver() {
         <!-- Backend status indicator -->
         <div class="flex items-center gap-2 text-sm">
           <span class="text-[hsl(var(--muted-foreground))]">Backend:</span>
-          <div v-if="sidecar.isLoading.value" class="flex items-center gap-1">
-            <Loader2 class="h-4 w-4 animate-spin" />
-            <span>Starting...</span>
-          </div>
+          <!-- Ready state -->
           <div
-            v-else-if="sidecar.status.value.healthy"
+            v-if="sidecar.status.value.healthy"
             class="flex items-center gap-1 text-green-600"
           >
             <CheckCircle2 class="h-4 w-4" />
             <span>Ready</span>
           </div>
+          <!-- Starting state: loading OR running but not yet healthy -->
+          <div
+            v-else-if="sidecar.isLoading.value || sidecar.status.value.running"
+            class="flex items-center gap-1 text-amber-600"
+          >
+            <Loader2 class="h-4 w-4 animate-spin" />
+            <span>Starting...</span>
+          </div>
+          <!-- Offline state -->
           <div v-else class="flex items-center gap-1 text-red-600">
             <XCircle class="h-4 w-4" />
             <span>Offline</span>
             <Button variant="outline" size="sm" @click="sidecar.startBackend">
-              Retry
+              Start
             </Button>
           </div>
         </div>
@@ -140,7 +147,10 @@ function handleStartOver() {
         <!-- Left column: Input -->
         <div class="min-w-0 space-y-6">
           <Card class="p-6">
-            <h2 class="mb-4 text-lg font-medium">Input Text</h2>
+            <h2 class="mb-4 flex items-center gap-2 text-lg font-medium">
+              Input Text
+              <Tooltip text="Enter or upload German text containing personal information. The system will detect and anonymize names, addresses, phone numbers, AHV numbers, and other sensitive data." />
+            </h2>
 
             <!-- File upload -->
             <FileUpload class="mb-4" @file-loaded="handleFileLoaded" />
@@ -219,7 +229,10 @@ Kontakt: hans.muller@example.com oder +41 79 123 45 67"
           </div>
 
           <Card class="p-6">
-            <h2 class="mb-4 text-lg font-medium">Results</h2>
+            <h2 class="mb-4 flex items-center gap-2 text-lg font-medium">
+              Results
+              <Tooltip text="View the anonymized text with highlighted entities. Click on highlighted text to exclude it from anonymization or change its type." />
+            </h2>
             <ResultViewer
               v-if="anonymizer.result.value"
               :result="anonymizer.result.value"
