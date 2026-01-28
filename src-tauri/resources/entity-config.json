@@ -1,0 +1,13 @@
+{
+  "disabled": [],
+  "hidden": [
+    "CRYPTO",
+    "IP_ADDRESS",
+    "URL",
+    "MEDICAL_LICENSE",
+    "NRP",
+    "ID",
+    "IBAN_CODE",
+    "CH_IBAN"
+  ]
+}

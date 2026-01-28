@@ -36,8 +36,8 @@ npm-debug.log*
 .env.local
 .env.*.local
 
-# User config (managed by app)
-entity-config.json
+# User config (managed by app) - only in root, not bundled resources
+/entity-config.json
 
 # Tauri build artifacts (keep binaries for distribution)
 # src-tauri/binaries/
