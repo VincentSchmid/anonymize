@@ -3,6 +3,12 @@
  */
 
 const API_BASE_URL = "http://127.0.0.1:14200";
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 1000;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 export interface DetectedEntity {
   entity_type: string;
@@ -70,44 +76,58 @@ class ApiClient {
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
+    let lastError: Error | null = null;
 
-    let response: Response;
-    try {
-      response = await fetch(url, {
-        ...options,
-        headers: {
-          "Content-Type": "application/json",
-          ...options.headers,
-        },
-      });
-    } catch (e) {
-      // Network-level errors (connection refused, DNS failure, etc.)
-      const errorMessage = e instanceof Error ? e.message : String(e);
-      throw new Error(
-        `Network error calling ${endpoint}: ${errorMessage}. ` +
-        `Please check that the backend service is running on ${this.baseUrl}`
-      );
-    }
-
-    if (!response.ok) {
-      let errorBody = "";
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      let response: Response;
       try {
-        errorBody = await response.text();
-      } catch {
-        errorBody = "(unable to read error response)";
+        response = await fetch(url, {
+          ...options,
+          headers: {
+            "Content-Type": "application/json",
+            ...options.headers,
+          },
+        });
+      } catch (e) {
+        // Network-level errors (connection refused, DNS failure, etc.)
+        const errorMessage = e instanceof Error ? e.message : String(e);
+        lastError = new Error(
+          `Network error calling ${endpoint}: ${errorMessage}. ` +
+          `Please check that the backend service is running on ${this.baseUrl}`
+        );
+
+        if (attempt < MAX_RETRIES) {
+          console.log(`[API] Retry ${attempt}/${MAX_RETRIES} for ${endpoint} after network error`);
+          await sleep(RETRY_DELAY_MS * attempt);
+          continue;
+        }
+        throw lastError;
       }
-      throw new Error(
-        `API error on ${endpoint} (HTTP ${response.status} ${response.statusText}): ${errorBody}`
-      );
+
+      if (!response.ok) {
+        let errorBody = "";
+        try {
+          errorBody = await response.text();
+        } catch {
+          errorBody = "(unable to read error response)";
+        }
+        // Don't retry HTTP errors (4xx, 5xx) - only network failures
+        throw new Error(
+          `API error on ${endpoint} (HTTP ${response.status} ${response.statusText}): ${errorBody}`
+        );
+      }
+
+      try {
+        return await response.json();
+      } catch (e) {
+        throw new Error(
+          `Invalid JSON response from ${endpoint}: ${e instanceof Error ? e.message : String(e)}`
+        );
+      }
     }
 
-    try {
-      return await response.json();
-    } catch (e) {
-      throw new Error(
-        `Invalid JSON response from ${endpoint}: ${e instanceof Error ? e.message : String(e)}`
-      );
-    }
+    // Should not reach here, but just in case
+    throw lastError || new Error(`Request to ${endpoint} failed after ${MAX_RETRIES} retries`);
   }
 
   async health(): Promise<HealthResponse> {
