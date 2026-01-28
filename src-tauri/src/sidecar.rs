@@ -46,11 +46,22 @@ pub async fn start_sidecar(app: &AppHandle) -> Result<(), String> {
     let shell = app.shell();
     let sidecar = shell
         .sidecar("anonymize-api")
-        .map_err(|e| format!("Failed to create sidecar command: {}", e))?;
+        .map_err(|e| format!(
+            "Failed to create sidecar command: {}. \
+            The sidecar binary 'anonymize-api' may be missing from the installation.",
+            e
+        ))?;
 
-    let (mut rx, child) = sidecar
-        .spawn()
-        .map_err(|e| format!("Failed to spawn sidecar: {}", e))?;
+    let (mut rx, child) = sidecar.spawn().map_err(|e| {
+        format!(
+            "Failed to start the backend service: {}. \
+            Possible causes: (1) The executable may be blocked by antivirus software, \
+            (2) Required system libraries may be missing, \
+            (3) The application may not have permission to run executables. \
+            Try running the application as administrator or check your antivirus settings.",
+            e
+        )
+    })?;
 
     // Store the child process
     {
@@ -132,8 +143,12 @@ async fn wait_for_health() -> Result<(), String> {
     }
 
     Err(format!(
-        "Sidecar failed to become healthy within {} seconds",
-        HEALTH_CHECK_TIMEOUT_SECS
+        "Backend service failed to start within {} seconds. \
+        The service may have crashed during startup. \
+        Check if port {} is already in use by another application, \
+        or if there are missing dependencies (Python runtime, spaCy model).",
+        HEALTH_CHECK_TIMEOUT_SECS,
+        SIDECAR_PORT
     ))
 }
 

@@ -70,20 +70,44 @@ class ApiClient {
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
-    });
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`API error (${response.status}): ${error}`);
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          ...options.headers,
+        },
+      });
+    } catch (e) {
+      // Network-level errors (connection refused, DNS failure, etc.)
+      const errorMessage = e instanceof Error ? e.message : String(e);
+      throw new Error(
+        `Network error calling ${endpoint}: ${errorMessage}. ` +
+        `Please check that the backend service is running on ${this.baseUrl}`
+      );
     }
 
-    return response.json();
+    if (!response.ok) {
+      let errorBody = "";
+      try {
+        errorBody = await response.text();
+      } catch {
+        errorBody = "(unable to read error response)";
+      }
+      throw new Error(
+        `API error on ${endpoint} (HTTP ${response.status} ${response.statusText}): ${errorBody}`
+      );
+    }
+
+    try {
+      return await response.json();
+    } catch (e) {
+      throw new Error(
+        `Invalid JSON response from ${endpoint}: ${e instanceof Error ? e.message : String(e)}`
+      );
+    }
   }
 
   async health(): Promise<HealthResponse> {
