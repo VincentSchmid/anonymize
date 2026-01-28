@@ -42,6 +42,9 @@ def main():
     import spacy
     model_path = Path(spacy.util.get_package_path("de_core_news_sm"))
 
+    # Path separator for --add-data is different on Windows
+    path_sep = ";" if platform.system() == "Windows" else ":"
+
     # PyInstaller command
     cmd = [
         sys.executable,
@@ -58,7 +61,7 @@ def main():
         str(src_python),
         # Include spaCy model data
         "--add-data",
-        f"{model_path}:de_core_news_sm",
+        f"{model_path}{path_sep}de_core_news_sm",
         # Hidden imports that PyInstaller might miss
         "--hidden-import",
         "uvicorn.logging",
