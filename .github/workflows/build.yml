@@ -39,11 +39,20 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "src-python/uv.lock"
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+          cache-on-failure: true
 
       - name: Install dependencies (macOS)
         if: runner.os == 'macOS'
@@ -61,11 +70,30 @@ jobs:
       - name: Install Python dependencies
         run: uv sync --project src-python
 
+      - name: Cache Python sidecar binary
+        id: cache-sidecar
+        uses: actions/cache@v4
+        with:
+          path: src-tauri/binaries/
+          key: sidecar-${{ matrix.target }}-${{ hashFiles('src-python/**/*.py', 'src-python/pyproject.toml', 'src-python/uv.lock') }}
+
       - name: Build Python sidecar
+        if: steps.cache-sidecar.outputs.cache-hit != 'true'
         shell: bash
         run: |
           uv run --project src-python python src-python/build.py
           ls -la src-tauri/binaries/
+
+      - name: Verify sidecar binary
+        shell: bash
+        run: |
+          echo "Sidecar binary status:"
+          ls -lh src-tauri/binaries/ || echo "No binaries directory"
+          if [ "${{ steps.cache-sidecar.outputs.cache-hit }}" == "true" ]; then
+            echo "✓ Using cached sidecar binary"
+          else
+            echo "✓ Built new sidecar binary"
+          fi
 
       - name: Rename sidecar binary
         shell: bash
