@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/**
+test/**
+# Build outputs
+dist/
+src-tauri/target/
+
+# Python
+src-python/.venv/
+src-python/__pycache__/
+src-python/**/__pycache__/
+src-python/*.egg-info/
+src-python/build/
+src-python/dist/
+src-python/*.spec
+*.pyc
+*.pyo
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# User config (managed by app)
+entity-config.json
+
+# Tauri build artifacts (keep binaries for distribution)
+# src-tauri/binaries/

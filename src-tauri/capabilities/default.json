@@ -1,0 +1,30 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "identifier": "default",
+  "description": "Default capability for the anonymize app",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "shell:allow-spawn",
+    "shell:allow-execute",
+    "shell:allow-kill",
+    "shell:allow-open",
+    "fs:allow-read-text-file",
+    "fs:allow-write-text-file",
+    "fs:allow-exists",
+    "fs:allow-create",
+    "fs:allow-mkdir",
+    {
+      "identifier": "fs:scope",
+      "allow": [
+        "$APPDATA/**",
+        "$RESOURCE/**",
+        "$DOWNLOAD/**",
+        "$DOCUMENT/**",
+        "$DESKTOP/**",
+        "$HOME/**"
+      ]
+    },
+    "dialog:allow-save"
+  ]
+}

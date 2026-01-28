@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash($HOME/.local/bin/uv run python -c \"from anonymize_api.core.analyzer import get_analyzer; a = get_analyzer\\(\\); print\\(''Analyzer loaded successfully''\\)\")",
+      "Bash($HOME/.local/bin/uv run --project /Users/vinc/dev/claude-apps/anonymize/src-python python -c \"from anonymize_api.core.analyzer import get_analyzer; a = get_analyzer\\(\\); print\\(''Analyzer loaded successfully''\\)\")",
+      "Bash(npm --version:*)",
+      "Bash(bun:*)",
+      "Bash(npm install)",
+      "Bash(npm run build:*)",
+      "Bash(cargo:*)",
+      "Bash(chmod:*)",
+      "Bash(pkill:*)",
+      "Bash($HOME/.local/bin/uv run python build.py)",
+      "Bash($HOME/.local/bin/uv run:*)",
+      "Bash(npm run tauri:*)",
+      "Bash(/Applications/Anonymize.app/Contents/MacOS/anonymize:*)",
+      "Bash(curl:*)",
+      "Bash(pgrep:*)",
+      "Bash(lsof:*)",
+      "Bash(/Users/vinc/.local/bin/uv run:*)",
+      "Bash(~/.local/bin/uv run:*)",
+      "Bash(just build-sidecar:*)",
+      "Bash(npm install @tauri-apps/plugin-dialog)"
+    ]
+  }
+}
