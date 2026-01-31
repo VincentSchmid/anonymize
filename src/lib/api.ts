@@ -64,6 +64,18 @@ export interface ConfigResponse {
   spacy_model: string;
 }
 
+export interface NlpEngineInfo {
+  id: string;
+  name: string;
+  description: string;
+  model: string;
+}
+
+export interface NlpEngineResponse {
+  current: string;
+  engines: NlpEngineInfo[];
+}
+
 class ApiClient {
   private baseUrl: string;
 
@@ -165,6 +177,17 @@ class ApiClient {
     return this.request<ConfigResponse>("/config", {
       method: "PUT",
       body: JSON.stringify({ default_entities: defaultEntities }),
+    });
+  }
+
+  async getEngine(): Promise<NlpEngineResponse> {
+    return this.request<NlpEngineResponse>("/engine");
+  }
+
+  async setEngine(engineId: string): Promise<NlpEngineResponse> {
+    return this.request<NlpEngineResponse>("/engine", {
+      method: "PUT",
+      body: JSON.stringify({ engine: engineId }),
     });
   }
 }

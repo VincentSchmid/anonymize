@@ -6,6 +6,7 @@ import TextInput from "@/components/TextInput.vue";
 import FileUpload from "@/components/FileUpload.vue";
 import EntityToggle from "@/components/EntityToggle.vue";
 import AnonymizationSettings from "@/components/AnonymizationSettings.vue";
+import ModelSettings from "@/components/ModelSettings.vue";
 import ResultViewer from "@/components/ResultViewer.vue";
 import EntityDetailsSidebar from "@/components/EntityDetailsSidebar.vue";
 import { useSidecar } from "@/composables/useSidecar";
@@ -197,10 +198,19 @@ Kontakt: hans.muller@example.com oder +41 79 123 45 67"
         <!-- Right column: Settings -->
         <div class="space-y-6">
           <Card class="p-6">
+            <ModelSettings
+              :model-value="anonymizer.currentEngine.value"
+              :engines="anonymizer.availableEngines.value"
+              :is-loading="anonymizer.isLoadingEngineInfo.value || anonymizer.isLoadingEngine.value"
+              @update:model-value="anonymizer.setEngine"
+            />
+          </Card>
+
+          <Card class="p-6">
             <AnonymizationSettings v-model="anonymizer.anonymizationStyle.value" />
           </Card>
 
-          <Card class="max-h-[500px] overflow-y-auto p-6">
+          <Card class="max-h-[400px] overflow-y-auto p-6">
             <EntityToggle
               :entities="anonymizer.entities.value"
               :enabled-entities="anonymizer.enabledEntities.value"

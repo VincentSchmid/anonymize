@@ -103,6 +103,15 @@ def main():
         "de_core_news_sm",
         "--collect-all",
         "thinc",
+        # Transformers engine support
+        "--hidden-import",
+        "transformers",
+        "--hidden-import",
+        "spacy_huggingface_pipelines",
+        "--collect-all",
+        "transformers",
+        "--collect-all",
+        "spacy_huggingface_pipelines",
         # Entry point
         str(src_python / "anonymize_api" / "main.py"),
     ]

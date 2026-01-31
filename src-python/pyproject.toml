@@ -12,6 +12,10 @@ dependencies = [
     "pydantic>=2.0.0",
     "pydantic-settings>=2.0.0",
     "de-core-news-sm @ https://github.com/explosion/spacy-models/releases/download/de_core_news_sm-3.8.0/de_core_news_sm-3.8.0-py3-none-any.whl",
+    # Transformers engine dependencies (model downloaded at runtime, not build time)
+    "transformers>=4.40.0",
+    "torch>=2.0.0",
+    "spacy-huggingface-pipelines>=0.0.4",
 ]
 
 [build-system]

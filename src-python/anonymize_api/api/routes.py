@@ -16,8 +16,12 @@ from anonymize_api.api.schemas import (
     EntitiesResponse,
     EntityInfo,
     HealthResponse,
+    NlpEngineInfo,
+    NlpEngineResponse,
+    NlpEngineUpdate,
 )
-from anonymize_api.core.analyzer import get_analyzer, get_supported_entities
+from anonymize_api.core.analyzer import get_analyzer, get_supported_entities, switch_engine
+from anonymize_api.core.config import NlpEngineType
 from anonymize_api.core.anonymizer import anonymize_text
 from anonymize_api.core.config import settings
 
@@ -161,4 +165,52 @@ async def update_config(update: ConfigUpdate) -> ConfigResponse:
     return ConfigResponse(
         default_entities=settings.default_entities,
         spacy_model=settings.spacy_model,
+    )
+
+
+# NLP Engine definitions
+_ENGINE_INFO = {
+    NlpEngineType.SPACY: NlpEngineInfo(
+        id="spacy",
+        name="spaCy",
+        description="General German NLP model. Good for organization names, fast processing.",
+        model=settings.spacy_model,
+    ),
+    NlpEngineType.TRANSFORMERS: NlpEngineInfo(
+        id="transformers",
+        name="EU PII Safeguard",
+        description="Specialized EU PII detection model. Better for passwords, titles, addresses.",
+        model=settings.transformers_model,
+    ),
+}
+
+
+@router.get("/engine", response_model=NlpEngineResponse)
+async def get_engine() -> NlpEngineResponse:
+    """Get the current NLP engine and available engines."""
+    return NlpEngineResponse(
+        current=settings.nlp_engine.value,
+        engines=list(_ENGINE_INFO.values()),
+    )
+
+
+@router.put("/engine", response_model=NlpEngineResponse)
+async def set_engine(update: NlpEngineUpdate) -> NlpEngineResponse:
+    """Switch to a different NLP engine.
+
+    Note: This may take a few seconds as the new model is loaded.
+    """
+    try:
+        engine_type = NlpEngineType(update.engine)
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid engine: {update.engine}. Must be 'spacy' or 'transformers'",
+        )
+
+    switch_engine(engine_type)
+
+    return NlpEngineResponse(
+        current=settings.nlp_engine.value,
+        engines=list(_ENGINE_INFO.values()),
     )

@@ -7,6 +7,7 @@ import api, {
   type AnonymizeResponse,
   type EntityInfo,
   type DetectedEntity,
+  type NlpEngineInfo,
 } from "@/lib/api";
 import { useEntityConfig } from "./useEntityConfig";
 
@@ -35,6 +36,12 @@ export function useAnonymizer() {
   const isLoading = ref(false);
   const isLoadingEntities = ref(false);
   const error = ref<string | null>(null);
+
+  // Engine state
+  const currentEngine = ref<string>("spacy");
+  const availableEngines = ref<NlpEngineInfo[]>([]);
+  const isLoadingEngine = ref(false);
+  const isLoadingEngineInfo = ref(false);
 
   // Editable entities state
   const editedEntities = ref<EditableEntity[]>([]);
@@ -119,6 +126,9 @@ export function useAnonymizer() {
       // Load entity config first
       await entityConfig.loadConfig();
 
+      // Load engine info
+      await loadEngineInfo();
+
       const response = await api.getEntities();
       console.log("[useAnonymizer] Entities loaded:", response.entities.length, response.entities.map(e => e.type));
       allEntities.value = response.entities;
@@ -139,6 +149,42 @@ export function useAnonymizer() {
       error.value = e instanceof Error ? e.message : String(e);
     } finally {
       isLoadingEntities.value = false;
+    }
+  }
+
+  async function loadEngineInfo() {
+    isLoadingEngineInfo.value = true;
+    try {
+      const response = await api.getEngine();
+      currentEngine.value = response.current;
+      availableEngines.value = response.engines;
+      console.log("[useAnonymizer] Engine info loaded:", response.current, response.engines.map(e => e.id));
+    } catch (e) {
+      console.error("[useAnonymizer] Failed to load engine info:", e);
+    } finally {
+      isLoadingEngineInfo.value = false;
+    }
+  }
+
+  async function setEngine(engineId: string) {
+    if (engineId === currentEngine.value) return;
+
+    isLoadingEngine.value = true;
+    error.value = null;
+
+    try {
+      const response = await api.setEngine(engineId);
+      currentEngine.value = response.current;
+      availableEngines.value = response.engines;
+      console.log("[useAnonymizer] Engine switched to:", response.current);
+
+      // Reload entities as they might differ between engines
+      await loadEntities();
+    } catch (e) {
+      console.error("[useAnonymizer] Failed to switch engine:", e);
+      error.value = e instanceof Error ? e.message : String(e);
+    } finally {
+      isLoadingEngine.value = false;
     }
   }
 
@@ -355,6 +401,12 @@ export function useAnonymizer() {
     error,
     editedEntities,
 
+    // Engine state
+    currentEngine,
+    availableEngines,
+    isLoadingEngine,
+    isLoadingEngineInfo,
+
     // Computed
     hasInput,
     hasResult,
@@ -378,5 +430,6 @@ export function useAnonymizer() {
     reclassifyEntity,
     resetEdits,
     addManualEntity,
+    setEngine,
   };
 }

@@ -1,6 +1,15 @@
 """Application configuration."""
 
+from enum import Enum
+
 from pydantic_settings import BaseSettings
+
+
+class NlpEngineType(str, Enum):
+    """Supported NLP engine types."""
+
+    SPACY = "spacy"
+    TRANSFORMERS = "transformers"
 
 
 class Settings(BaseSettings):
@@ -11,8 +20,15 @@ class Settings(BaseSettings):
     host: str = "127.0.0.1"
     port: int = 14200
 
-    # spaCy model for German
+    # NLP engine type: "spacy" or "transformers"
+    # Default to spacy for better compatibility with bundled app
+    nlp_engine: NlpEngineType = NlpEngineType.SPACY
+
+    # spaCy model for German (used by spacy engine and for tokenization in transformers)
     spacy_model: str = "de_core_news_sm"
+
+    # Transformers model for NER
+    transformers_model: str = "tabularisai/eu-pii-safeguard"
 
     # Default enabled entity types
     default_entities: list[str] = [

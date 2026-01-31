@@ -109,3 +109,25 @@ class ConfigUpdate(BaseModel):
         None,
         description="New default entities list",
     )
+
+
+class NlpEngineInfo(BaseModel):
+    """Information about an NLP engine."""
+
+    id: str = Field(..., description="Engine identifier (spacy or transformers)")
+    name: str = Field(..., description="Human-readable name")
+    description: str = Field(..., description="Description of the engine")
+    model: str = Field(..., description="Model being used")
+
+
+class NlpEngineResponse(BaseModel):
+    """Response with current NLP engine and available engines."""
+
+    current: str = Field(..., description="Currently active engine ID")
+    engines: list[NlpEngineInfo] = Field(..., description="Available engines")
+
+
+class NlpEngineUpdate(BaseModel):
+    """Request to change the NLP engine."""
+
+    engine: str = Field(..., description="Engine ID to switch to (spacy or transformers)")
