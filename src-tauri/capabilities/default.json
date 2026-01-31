@@ -25,6 +25,9 @@
         "$HOME/**"
       ]
     },
-    "dialog:allow-save"
+    "dialog:allow-save",
+    "updater:default",
+    "process:allow-restart",
+    "process:allow-exit"
   ]
 }

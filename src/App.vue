@@ -9,8 +9,10 @@ import AnonymizationSettings from "@/components/AnonymizationSettings.vue";
 import ModelSettings from "@/components/ModelSettings.vue";
 import ResultViewer from "@/components/ResultViewer.vue";
 import EntityDetailsSidebar from "@/components/EntityDetailsSidebar.vue";
+import UpdateBanner from "@/components/UpdateBanner.vue";
 import { useSidecar } from "@/composables/useSidecar";
 import { useAnonymizer } from "@/composables/useAnonymizer";
+import { useUpdater } from "@/composables/useUpdater";
 import Tooltip from "@/components/ui/tooltip.vue";
 import {
   Shield,
@@ -26,6 +28,7 @@ const currentView = ref<ViewMode>("input");
 
 const sidecar = useSidecar();
 const anonymizer = useAnonymizer();
+const updater = useUpdater();
 
 // Load entities when backend becomes healthy
 watch(
@@ -53,6 +56,9 @@ onMounted(async () => {
   if (sidecar.status.value.healthy) {
     await anonymizer.loadEntities();
   }
+
+  // Check for updates on startup (silently in background)
+  updater.checkForUpdates();
 });
 
 function handleFileLoaded(content: string) {
@@ -126,6 +132,18 @@ function handleStartOver() {
 
     <!-- Main content -->
     <main class="mx-auto max-w-[1800px] p-6">
+      <!-- Update banner -->
+      <UpdateBanner
+        v-if="updater.updateAvailable.value && updater.updateInfo.value"
+        :update-info="updater.updateInfo.value"
+        :is-downloading="updater.isDownloading.value"
+        :is-installing="updater.isInstalling.value"
+        :download-progress="updater.downloadProgress.value"
+        class="mb-6"
+        @install="updater.downloadAndInstall"
+        @dismiss="updater.dismissUpdate"
+      />
+
       <!-- Error banner -->
       <div
         v-if="anonymizer.error.value"

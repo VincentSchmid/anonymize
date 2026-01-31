@@ -22,7 +22,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; connect-src 'self' http://127.0.0.1:14200; style-src 'self' 'unsafe-inline'"
+      "csp": "default-src 'self'; connect-src 'self' http://127.0.0.1:14200 https://github.com https://api.github.com; style-src 'self' 'unsafe-inline'"
     }
   },
   "bundle": {
@@ -41,6 +41,12 @@
   "plugins": {
     "shell": {
       "open": true
+    },
+    "updater": {
+      "endpoints": [
+        "https://github.com/VincentSchmid/anonymize/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEVFQ0UyQ0I1NENBNTJDM0QKUldROUxLVk10U3pPN2llb1Vmd1BONkU4V1VLTGYyU3RmZWwrTUg3MUo2Z1p6VXRSU3d4MHVlTFIK"
     }
   }
 }
