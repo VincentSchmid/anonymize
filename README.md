@@ -1,20 +1,71 @@
 # Anonymize
 
-A desktop application for anonymizing Swiss documents using Microsoft Presidio. Built with Vue, Tauri, and Python.
+A desktop app for anonymizing sensitive information in Swiss documents. Paste or upload text, and the app automatically detects and redacts personal data like names, addresses, AHV numbers, and more.
+
+**All processing happens locally on your machine** — your data never leaves your computer.
+
+## Download
+
+Download the latest version from the [Releases](https://github.com/bitfox-ch/anonymize/releases) page:
+
+- **macOS**: Download the `.dmg` file
+- **Windows**: Download the `.msi` installer
+
+### Important: Unsigned Executables
+
+The app is not code-signed, so your operating system will show security warnings.
+
+**On Windows:**
+1. When you run the installer, Windows Defender SmartScreen will block it
+2. Click "More info"
+3. Click "Run anyway"
+
+**On macOS:**
+1. After mounting the DMG and dragging the app to Applications, macOS will block it
+2. Open Terminal and run:
+   ```bash
+   xattr -cr /Applications/Anonymize.app
+   ```
+3. Now you can open the app normally
 
 ## Features
 
-- **Swiss-specific entity detection**: AHV/AVS numbers, Swiss phone numbers, postal codes, and IBAN
+- **Swiss-specific detection**: Recognizes AHV/AVS numbers, Swiss phone numbers, postal codes, and IBAN
 - **Standard PII detection**: Names, email addresses, locations, dates, and more
 - **Multiple anonymization styles**:
   - **Replace**: `Hans Müller` → `<PERSON>`
   - **Mask**: `Hans Müller` → `***********`
   - **Hash**: `Hans Müller` → `a1b2c3d4...`
   - **Redact**: `Hans Müller` → *(removed)*
-- **Offline processing**: All data stays on your machine
-- **German language optimized**: Uses spaCy's German NLP model
+- **Two NLP models to choose from**:
+  - **spaCy** (`de_core_news_sm`): Fast, lightweight German model (~15MB). Bundled with the app, works completely offline.
+  - **Transformers** (`tabularisai/eu-pii-safeguard`): More accurate EU-focused PII detection with broader entity coverage. Downloaded on first use (~500MB).
+- **Completely offline**: No internet connection required (with spaCy model)
 
-## Architecture
+## Supported Entity Types
+
+### Swiss-specific
+| Entity | Example |
+|--------|---------|
+| AHV/AVS number | `756.1234.5678.90` |
+| Swiss phone number | `+41 79 123 45 67` |
+| Swiss postal code | `8001` |
+| Swiss IBAN | `CH93 0076 2011 6238 5295 7` |
+
+### Standard
+| Entity | Example |
+|--------|---------|
+| Person names | `Hans Müller` |
+| Email addresses | `hans@example.ch` |
+| Phone numbers | `044 123 45 67` |
+| Locations | `Zürich`, `Bahnhofstrasse 1` |
+| Dates | `15. März 2024` |
+
+---
+
+## Technical Details
+
+### Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -32,43 +83,46 @@ A desktop application for anonymizing Swiss documents using Microsoft Presidio. 
 └─────────────────────────────────────────────────────────┘
 ```
 
-## Prerequisites
+### Tech Stack
 
-- **Node.js** 18+ and npm
-- **Rust** (for Tauri)
-- **uv** (Python package manager) - will be installed automatically if missing
-- **Python** 3.11+
+- **Frontend**: Vue 3, TypeScript, Tailwind CSS 4, Vite
+- **Desktop**: Tauri 2, Rust
+- **Backend**: Python 3.11+, FastAPI, Uvicorn
+- **NLP**: Microsoft Presidio, spaCy (de_core_news_sm)
 
-## Quick Start
+### Building from Source
 
-### 1. Install dependencies
+#### Prerequisites
+
+- Node.js 18+ and npm
+- Rust (for Tauri)
+- Python 3.11+
+- uv (Python package manager)
+
+#### Development
 
 ```bash
-# Install Node.js dependencies
+# Install dependencies
 npm install
+uv sync --project src-python
 
-# Install Python dependencies
-~/.local/bin/uv sync --project src-python
-```
-
-### 2. Run in development mode
-
-**Option A: Full Tauri app**
-```bash
+# Run in development mode
 npm run tauri dev
 ```
 
-**Option B: Python API only (for testing)**
+#### Production Build
+
 ```bash
-~/.local/bin/uv run --project src-python uvicorn anonymize_api.main:app --port 14200
+# Build Python sidecar first
+uv run --project src-python python src-python/build.py
+
+# Build desktop app
+npm run tauri build
 ```
 
-**Option C: Frontend only (requires API running)**
-```bash
-npm run dev
-```
+### API Endpoints
 
-## API Endpoints
+The Python sidecar runs on port 14200 and exposes:
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -79,7 +133,7 @@ npm run dev
 | `GET` | `/config` | Get current configuration |
 | `PUT` | `/config` | Update configuration |
 
-### Example: Anonymize text
+#### Example
 
 ```bash
 curl -X POST http://localhost:14200/anonymize \
@@ -99,118 +153,26 @@ Response:
     {"entity_type": "PERSON", "text": "Hans Müller", "score": 0.85},
     {"entity_type": "LOCATION", "text": "Zürich", "score": 0.85},
     {"entity_type": "CH_AHV", "text": "756.1234.5678.90", "score": 0.95}
-  ],
-  "anonymization_style": "replace"
+  ]
 }
 ```
 
-## Supported Entity Types
-
-### Swiss-specific
-| Entity | Description | Example |
-|--------|-------------|---------|
-| `CH_AHV` | Swiss social security number | `756.1234.5678.90` |
-| `CH_PHONE` | Swiss phone number | `+41 79 123 45 67` |
-| `CH_POSTAL_CODE` | Swiss postal code | `8001` |
-| `CH_IBAN` | Swiss IBAN | `CH93 0076 2011 6238 5295 7` |
-
-### Standard
-| Entity | Description |
-|--------|-------------|
-| `PERSON` | Person names |
-| `EMAIL_ADDRESS` | Email addresses |
-| `PHONE_NUMBER` | Phone numbers |
-| `LOCATION` | Addresses, cities |
-| `DATE_TIME` | Dates and times |
-| `IBAN_CODE` | International bank accounts |
-
-## Building for Production
-
-### 1. Build the Python sidecar binary
-
-```bash
-cd src-python
-~/.local/bin/uv run python build.py
-```
-
-This creates a standalone binary in `src-tauri/binaries/`.
-
-### 2. Build the desktop app
-
-```bash
-npm run tauri build
-```
-
-Output locations:
-- **macOS**: `src-tauri/target/release/bundle/dmg/`
-- **Windows**: `src-tauri/target/release/bundle/msi/`
-- **Linux**: `src-tauri/target/release/bundle/appimage/`
-
-## Project Structure
+### Project Structure
 
 ```
 anonymize/
 ├── src/                          # Vue frontend
-│   ├── components/
-│   │   ├── ui/                   # Base UI components
-│   │   ├── TextInput.vue         # Text input area
-│   │   ├── FileUpload.vue        # File drag & drop
-│   │   ├── EntityToggle.vue      # Entity type toggles
-│   │   ├── AnonymizationSettings.vue
-│   │   └── ResultViewer.vue      # Results display
-│   ├── composables/
-│   │   ├── useAnonymizer.ts      # Anonymization logic
-│   │   └── useSidecar.ts         # Backend management
-│   └── lib/
-│       └── api.ts                # Typed API client
+│   ├── components/               # UI components
+│   ├── composables/              # Vue composables
+│   └── lib/                      # API client
 ├── src-tauri/                    # Tauri/Rust backend
-│   ├── src/
-│   │   ├── lib.rs                # App entry point
-│   │   └── sidecar.rs            # Sidecar management
-│   └── tauri.conf.json           # Tauri configuration
+│   ├── src/                      # Rust source
+│   └── tauri.conf.json           # Configuration
 ├── src-python/                   # Python sidecar
-│   ├── anonymize_api/
-│   │   ├── api/                  # FastAPI routes
-│   │   ├── core/                 # Presidio wrappers
-│   │   └── recognizers/          # Swiss recognizers
-│   ├── pyproject.toml            # Python dependencies
+│   ├── anonymize_api/            # FastAPI app
 │   └── build.py                  # PyInstaller build
-├── package.json
-└── vite.config.ts
+└── package.json
 ```
-
-## Configuration
-
-### Environment Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `ANONYMIZE_HOST` | `127.0.0.1` | API host |
-| `ANONYMIZE_PORT` | `14200` | API port |
-| `ANONYMIZE_DEBUG` | `false` | Enable debug mode |
-
-### Adjusting Entity Detection
-
-Edit `src-python/anonymize_api/core/config.py` to change default enabled entities:
-
-```python
-default_entities: list[str] = [
-    "PERSON",
-    "EMAIL_ADDRESS",
-    "PHONE_NUMBER",
-    "LOCATION",
-    "CH_AHV",
-    "CH_PHONE",
-    "CH_IBAN",
-]
-```
-
-## Tech Stack
-
-- **Frontend**: Vue 3, TypeScript, Tailwind CSS 4, Vite
-- **Desktop**: Tauri 2, Rust
-- **Backend**: Python 3.11+, FastAPI, Uvicorn
-- **NLP**: Microsoft Presidio, spaCy (de_core_news_sm)
 
 ## License
 
