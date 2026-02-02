@@ -2,7 +2,7 @@
 name = "anonymize"
 version = "0.1.0"
 description = "Swiss Document Anonymization App"
-authors = ["you"]
+authors = ["vincent schmid"]
 edition = "2021"
 
 [lib]
