@@ -36,7 +36,8 @@
       "icons/icon.ico"
     ],
     "externalBin": ["binaries/anonymize-api"],
-    "resources": ["resources/entity-config.json"]
+    "resources": ["resources/entity-config.json"],
+    "createUpdaterArtifacts": true
   },
   "plugins": {
     "shell": {

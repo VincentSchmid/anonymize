@@ -41,3 +41,4 @@ npm-debug.log*
 
 # Tauri build artifacts (keep binaries for distribution)
 # src-tauri/binaries/
+keys/*
